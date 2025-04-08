@@ -126,14 +126,20 @@ _autocomplete__history_lines() {
 
   local -Pa matches=()
   for index in "${(MS)displays[@]##<->}"; do
-    matches+=( "${${history[$index]##$~lbuffer}%%$~rbuffer}" )
+    local command="${${history[$index]##$~lbuffer}%%$~rbuffer}"
+    if [[ "$command" == *$'\n'* ]]; then
+      # multiline command: append ';'
+      matches+=( "$command;" )
+    else
+      # single-line command: no ';'
+      matches+=( "$command" )
+    fi
   done
 
   local -Pa suf=()
   if (( $#words[@] == 1 )); then
     if [[ $WIDGETSTYLE == *-select* ]]; then
-      # Enable mult-select.
-      suf=( -S ';' -R _autocomplete__history_lines_suffix )
+      suf=( -R _autocomplete__history_lines_suffix )
     else
       suf=( -qS ' ' )
     fi
